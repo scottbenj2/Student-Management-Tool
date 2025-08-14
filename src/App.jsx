@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from "react";
 
 // Components
-import Header from "./components/Header.js";
-import StudentForm from "./components/StudentForm.js";
-import StudentTable from "./components/StudentTable.js";
-import Calendar from "./components/Calendar.js";
+import Header from "./components/Header.jsx";
+import StudentForm from "./components/StudentForm.jsx";
+import StudentTable from "./components/StudentTable.jsx";
+import Calendar from "./components/Calendar.jsx";
 
 // Utilities
 import { loadStudents, saveStudents } from "./utils/localStorage";
 
 // Data
-import initialData from "./data";
+import initialData from "./data.js";
 
 // Styles
 import "./styles/App.css";
