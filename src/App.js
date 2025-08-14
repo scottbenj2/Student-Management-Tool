@@ -1,27 +1,17 @@
 import React, { useState, useEffect } from "react";
-
-// Components
-import Header from "./components/Header.js";
-import StudentForm from "./components/StudentForm.js";
-import StudentTable from "./components/StudentTable.js";
-import Calendar from "./components/Calendar.js";
-
-// Utilities
+import Header from "./components/Header";
+import StudentForm from "./components/StudentForm";
+import StudentTable from "./components/StudentTable";
+import Calendar from "./components/Calendar";
 import { loadStudents, saveStudents } from "./utils/localStorage";
-
-// Data
 import initialData from "./data";
-
-// Styles
-import "./styles/App.css";
 
 function App() {
   const [students, setStudents] = useState([]);
 
-  // Load students from localStorage or initial data
   useEffect(() => {
     const data = loadStudents();
-    if (!data || data.length === 0) {
+    if (data.length === 0) {
       setStudents(initialData);
       saveStudents(initialData);
     } else {
@@ -29,7 +19,6 @@ function App() {
     }
   }, []);
 
-  // Save students to localStorage whenever it changes
   useEffect(() => {
     saveStudents(students);
   }, [students]);
