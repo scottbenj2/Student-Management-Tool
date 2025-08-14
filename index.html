@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CSL Student Tracker</title>
+  <style>
+    :root{--accent:#2563eb;--muted:#6b7280;--bg:#f8fafc}
+    *{box-sizing:border-box}
+    body{font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin:0; background:var(--bg); color:#0f172a}
+    .wrap{max-width:1100px;margin:28px auto;padding:20px}
+    header{display:flex;align-items:center;gap:16px;margin-bottom:18px}
+    header h1{margin:0;font-size:20px}
+    .card{background:white;border-radius:12px;padding:16px;box-shadow:0 6px 18px rgba(15,23,42,0.06);}
+    form{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+    label{font-size:12px;color:var(--muted)}
+    input[type=text],input[type=email],select,input[type=time],select.day{width:100%;padding:10px;border-radius:8px;border:1px solid #e6eef8}
+    .full{grid-column:1/-1}
+    .actions{display:flex;gap:8px;align-items:center}
+    button{background:var(--accent);color:white;padding:10px 12px;border:none;border-radius:8px;cursor:pointer}
+    button.ghost{background:transparent;color:var(--accent);border:1px solid rgba(37,99,235,0.12)}
+    .controls{display:flex;gap:8px;align-items:center;margin:12px 0}
+    .table-wrap{overflow:auto;margin-top:12px}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:10px 12px;border-bottom:1px solid #f1f5f9;text-align:left}
+    th{font-size:12px;color:var(--muted)}
+    td small{display:block;color:var(--muted);font-size:12px}
+    .pill{padding:6px 8px;border-radius:999px;font-size:12px;color:white;display:inline-block}
+    .pill.explore{background:#64748b}
+    .pill.follow{background:#f59e0b}
+    .pill.reach{background:#10b981}
+    .pill.grow{background:#7c3aed}
+    .tiny{font-size:12px;color:var(--muted)}
+    .right{margin-left:auto}
+    .import-file{display:none}
+    .notesInput {
+      font-family: 'Roboto', monospace; 
+      font-size: 14px;
+      padding: 6px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      resize: vertical;
+    }
+    @media (max-width:900px){form{grid-template-columns:repeat(2,1fr)}
+      .full{grid-column:1/-1}
+    }
+    @media (max-width:560px){form{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="6" fill="#2563eb"/></svg>
+      <div>
+        <h1>CSL Student Tracker</h1>
+        <div class="tiny">Add students, track study stage and weekly meetup availability — single file, saves locally.</div>
+      </div>
+    </header>
+
+    <section class="card">
+      <form id="addForm">
+        <div>
+          <label for="name">Student name</label>
+          <input id="name" type="text" placeholder="Full name" required />
+        </div>
+        <div>
+          <label for="phone">Phone</label>
+          <input id="phone" type="text" placeholder="e.g. +64 21 555 555" />
+        </div>
+        <div>
+          <label for="email">Email</label>
+          <input id="email" type="email" placeholder="student@example.com" />
+        </div>
+        <div>
+          <label for="status">Study stage</label>
+          <select id="status">
+            <option value="explore">Explore</option>
+            <option value="follow">Follow up</option>
+            <option value="reach">Reach</option>
+            <option value="grow">Grow</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="day">Meet day</label>
+          <select id="day" class="day">
+            <option value="Monday">Monday</option>
+            <option value="Tuesday">Tuesday</option>
+            <option value="Wednesday">Wednesday</option>
+            <option value="Thursday">Thursday</option>
+            <option value="Friday">Friday</option>
+          </select>
+        </div>
+        <div>
+          <label for="time">Meet time</label>
+          <select id="time" class="time">
+            <option value="8am">8am</option>
+            <option value="9am">9am</option>
+            <option value="10am">10am</option>
+            <option value="11am">11am</option>
+            <option value="12pm">12pm</option>
+            <option value="1pm">1pm</option>
+            <option value="2pm">2pm</option>
+            <option value="3pm">3pm</option>
+            <option value="4pm">4pm</option>
+            <option value="5pm">5pm</option>
+            </select>
+        </div>
+
+        <div class="full actions">
+          <button id="saveBtn" type="submit">Add student</button>
+          <button id="clearBtn" type="button" class="ghost">Clear form</button>
+          <div class="right">
+            <input id="fileImport" class="import-file" type="file" accept=".csv,text/csv" />
+            <button id="importBtn" type="button" class="ghost">Import CSV</button>
+            <button id="exportBtn" type="button" class="ghost">Export CSV</button>
+            <button id="resetBtn" type="button" class="ghost">Reset all</button>
+          </div>
+        </div>
+      </form>
+
+      <div style="margin-top:10px" class="controls">
+        <input id="search" type="text" placeholder="Search name, phone or email" style="padding:10px;border-radius:8px;border:1px solid #e6eef8;flex:1" />
+        <select id="filterStatus" style="padding:10px;border-radius:8px;border:1px solid #e6eef8; width:200px">
+          <option value="all">All stages</option>
+          <option value="explore">Explore</option>
+          <option value="follow">Follow up</option>
+          <option value="reach">Reach</option>
+          <option value="grow">Grow</option>
+        </select>
+        <div class="tiny" style="margin-left:auto">Saved to browser localStorage</div>
+      </div>
+
+      <div class="table-wrap">
+        <table id="studentsTable">
+          <thead>
+            <tr><th>Name</th><th>Contact</th><th>Status</th><th>Weekly meetup</th><th>Notes</th><th>Actions</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer style="margin-top:12px;font-size:12px;color:var(--muted)">Tip: use Export to create a CSV backup. Import expects CSV with headers: id,name,phone,email,status,day,time</footer>
+  </div>
+
+  <template id="rowTpl">
+    <tr>
+      <td class="nameCell"></td>
+      <td class="contactCell"></td>
+      <td class="statusCell"></td>
+      <td class="meetCell"></td>
+      <td class="notesCell"></td>
+      <td class="actionCell"></td>
+    </tr>
+  </template>
+
+  <script>
+    // Simple client-side tracker stored in localStorage.
+    const STORAGE_KEY = 'csl_students_v1';
+    const form = document.getElementById('addForm');
+    const nameEl = document.getElementById('name');
+    const phoneEl = document.getElementById('phone');
+    const emailEl = document.getElementById('email');
+    const statusEl = document.getElementById('status');
+    const dayEl = document.getElementById('day');
+    const timeEl = document.getElementById('time');
+    const tableBody = document.querySelector('#studentsTable tbody');
+    const searchEl = document.getElementById('search');
+    const filterStatus = document.getElementById('filterStatus');
+
+    let students = [];
+    let editingId = null;
+
+    // load
+    function load(){
+      try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        students = raw ? JSON.parse(raw) : [];
+      }catch(e){students = []}
+    }
+    function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(students)); }
+
+    function resetForm(){ form.reset(); editingId = null; document.getElementById('saveBtn').textContent = 'Add student'; }
+
+    function render(){
+      tableBody.innerHTML = '';
+      const q = searchEl.value.trim().toLowerCase();
+      const f = filterStatus.value;
+      const list = students.filter(s => {
+        if(f !== 'all' && s.status !== f) return false;
+        if(!q) return true;
+        return (s.name||'').toLowerCase().includes(q) || (s.phone||'').toLowerCase().includes(q) || (s.email||'').toLowerCase().includes(q);
+      });
+
+      list.forEach(s => {
+        const tr = document.getElementById('rowTpl').content.cloneNode(true);
+        tr.querySelector('.nameCell').textContent = s.name;
+        const contact = tr.querySelector('.contactCell');
+        contact.innerHTML = (s.phone ? `<div>${s.phone}</div>` : '') + (s.email ? `<small>${s.email}</small>` : '');
+
+        const statusTd = tr.querySelector('.statusCell');
+        const pill = document.createElement('span');
+        pill.className = 'pill ' + (s.status==='explore'?'explore':s.status==='follow'?'follow':s.status==='reach'?'reach':'grow');
+        pill.textContent = s.status.charAt(0).toUpperCase() + s.status.slice(1);
+        statusTd.appendChild(pill);
+
+        tr.querySelector('.meetCell').textContent = (s.day ? s.day : '-') + (s.time ? ' @ ' + s.time : '');
+
+        // Notes cell with a text bubble (textarea)
+        const notesTd = tr.querySelector('.notesCell');
+        const notesInput = document.createElement('textarea');
+        notesInput.className = 'notesInput';
+        notesInput.placeholder = "Write notes here...";
+        notesInput.style.width = "100%";
+        notesInput.style.height = "50px";
+        notesInput.style.borderRadius = "8px";
+        notesInput.style.border = "1px solid #ccc";
+        notesInput.value = s.notes || "";
+        notesInput.addEventListener('input', () => {
+          s.notes = notesInput.value;
+          save();
+        });
+        notesTd.appendChild(notesInput);
+
+        const action = tr.querySelector('.actionCell');
+        const editBtn = document.createElement('button');
+        editBtn.className = 'ghost';
+        editBtn.textContent = 'Edit';
+        editBtn.onclick = () => { startEdit(s.id); };
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'ghost';
+        delBtn.textContent = 'Delete';
+        delBtn.onclick = () => {
+          if (confirm('Delete ' + s.name + '?')) {
+            students = students.filter(x => x.id !== s.id);
+            save();
+            render();
+          }
+        };
+
+        action.appendChild(editBtn);
+        action.appendChild(delBtn);
+        tableBody.appendChild(tr);
+      });
+    }
+
+    function startEdit(id){
+      const s = students.find(x=>x.id===id); if(!s) return;
+      editingId = id;
+      nameEl.value = s.name || '';
+      phoneEl.value = s.phone || '';
+      emailEl.value = s.email || '';
+      statusEl.value = s.status || 'explore';
+      dayEl.value = s.day || 'Monday';
+      timeEl.value = s.time || '';
+      document.getElementById('saveBtn').textContent = 'Save changes';
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
+
+    form.addEventListener('submit', e=>{
+      e.preventDefault();
+      const name = nameEl.value.trim();
+      if(!name){ alert('Please enter a name'); return; }
+      const phone = phoneEl.value.trim();
+      const email = emailEl.value.trim();
+      const status = statusEl.value;
+      const day = dayEl.value;
+      const time = timeEl.value;
+
+      if(editingId){
+        const idx = students.findIndex(x=>x.id===editingId);
+        if(idx>=0){ students[idx] = {...students[idx], name, phone, email, status, day, time}; }
+      } else {
+        const id = Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+        students.push({id,name,phone,email,status,day,time});
+      }
+      save(); resetForm(); render();
+    });
+
+    document.getElementById('clearBtn').addEventListener('click', resetForm);
+    searchEl.addEventListener('input', render);
+    filterStatus.addEventListener('change', render);
+
+    // export CSV
+    function toCSV(rows){
+      const header = ['id','name','phone','email','status','day','time'];
+      const esc = v => '"'+String(v||'').replace(/"/g,'""')+'"';
+      const lines = [header.join(',')].concat(rows.map(r=>header.map(k=>esc(r[k])).join(',')));
+      return lines.join('\n');
+    }
+    document.getElementById('exportBtn').addEventListener('click', ()=>{
+      const csv = toCSV(students);
+      const blob = new Blob([csv],{type:'text/csv'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'csl_students_export.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    });
+
+    // import CSV (very simple)
+    const fileInput = document.getElementById('fileImport');
+    document.getElementById('importBtn').addEventListener('click', ()=> fileInput.click());
+    fileInput.addEventListener('change', async (ev)=>{
+      const f = ev.target.files[0]; if(!f) return;
+      const text = await f.text();
+      try{
+        const lines = text.split(/\r?\n/).filter(Boolean);
+        const header = lines.shift().split(/,|\t/).map(h=>h.trim().replace(/^"|"$/g,''));
+        const rows = lines.map(l=>{
+          // quick CSV split that handles quoted values
+          const parts = l.match(/(?:"([^"]*(?:""[^"]*)*)"|([^,]+)|)/g).filter(Boolean).map(cell=>cell.replace(/^,|,$/g,'').replace(/^"|"$/g,'').replace(/""/g,'"'));
+          const obj = {};
+          header.forEach((h,i)=> obj[h]=parts[i]||'');
+          return obj;
+        });
+        // merge/append rows
+        rows.forEach(r=>{
+          if(!r.id) r.id = Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+          const existing = students.find(s=>s.id===r.id);
+          if(existing) Object.assign(existing, r); else students.push(r);
+        });
+        save(); render(); alert('Imported ' + rows.length + ' rows (appended/merged)');
+      }catch(e){ alert('Failed to parse CSV: '+e.message); }
+      fileInput.value = '';
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', ()=>{
+      if(confirm('This will delete ALL saved students from this browser. Continue?')){
+        students = []; save(); render();
+      }
+    });
+
+    // initial sample data if none present (optional)
+    load(); if(students.length===0){
+      students.push({id:'s1',name:'Benjamin Scott',phone:'+64 21 111 111',email:'Scott@example.com',status:'explore',day:'Wednesday',time:'4pm'});
+      students.push({id:'s2',name:'Bengerman',phone:'+64 21 222 222',email:'bongybong@example.com',status:'follow',day:'Monday',time:'3pm'});
+      students.push({id:'s3',name:'Benius Scottius',phone:'+64 21 333 333',email:'bengie@example.com',status:'reach',day:'Tuesday',time:'5pm'});
+      students.push({id:'s4',name:'Ben',phone:'+64 21 444 444',email:'Ben@example.com',status:'grow',day:'Friday',time:'10am'});
+      save();
+    }
+
+    render();
+
+    // small UX: allow Enter in search to focus add
+    searchEl.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); nameEl.focus(); } });
+
+    // notes for each student as a discpleship session planner 
+    const notesEl = document.getElementById('notes');
+    const notesInput = document.getElementById('notesInput');
+    notesEl.addEventListener('click', ()=> notesInput.focus());
+    notesInput.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); notesInput.value = ''; notesInput.blur(); } });
+    notesInput.addEventListener('input', e=>{ notesEl.textContent = e.target.value; });
+    notesInput.addEventListener('blur', e=>{ notesInput.value = ''; notesEl.textContent = '';
+    const id = notesInput.dataset.id;
+    if(id) students.find(s=>s.id===id).notes = notesInput.value; sav
+    });
+
+  </script>
+</body>
+</html>
+
+<!-- Calendar!??! -->
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>CSL Weekly Calendar with Meetups</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+    th { background: #f0f0f0; }
+    .available { background: #D0E7CA; color: white; }
+    .busy { background: #F2A2BD; color: white; }
+    .meetup { background: #FFD370; color: black; font-weight: bold; }
+  </style>
+</head>
+<body>
+<h1>CSL Weekly Calendar</h1>
+<footer style="margin-top:12px;font-size:12px;color:var(--muted)">Tip: Meetups should automatically fill in as a yellow block once you reload the page, please click each box to show when you aren't free!</footer>
+<table id="calendar">
+  <thead>
+    <tr>
+      <th>Time</th>
+      <th>Monday</th>
+      <th>Tuesday</th>
+      <th>Wednesday</th>
+      <th>Thursday</th>
+      <th>Friday</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+<script>
+const days = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
+
+const times = [];
+for (let h = 8; h < 18; h++) {
+  for (let m = 0; m < 30; m += 30) {
+    let ampmHour = h > 12 ? h - 12 : h;
+    let suffix = h >= 12 ? 'pm' : 'am';
+    let minuteStr = m === 0 ? '' : `:${String(m).padStart(2,'0')}`;
+    times.push(`${ampmHour}${minuteStr}${suffix}`);
+  }
+}
+
+const tbody = document.querySelector('#calendar tbody');
+
+times.forEach(time => {
+  const tr = document.createElement('tr');
+  const timeCell = document.createElement('td');
+  timeCell.textContent = time;
+  tr.appendChild(timeCell);
+
+  days.forEach(day => {
+    const td = document.createElement('td');
+    td.className = 'available';
+    td.dataset.day = day;
+    td.dataset.time = time;
+    td.addEventListener('click', () => {
+      if (td.classList.contains('available')) {
+        td.className = 'busy';
+      } else {
+        td.className = 'available';
+      }
+    });
+
+    // Check if this cell matches a student's meetup time
+    const meetup = students.find(s => 
+      s.day === day &&
+      s.time.toLowerCase().trim() === time.toLowerCase().trim()
+    );
+
+    if (meetup) {
+      td.className = 'meetup';
+      td.textContent = meetup.name;
+    }
+
+    tr.appendChild(td);
+  });
+
+  tbody.appendChild(tr);
+});
+</script>
+</body>
+</html>
