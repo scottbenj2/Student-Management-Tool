@@ -1,5 +1,5 @@
 .calendar { border-collapse: collapse; width: 100%; }
 .calendar th, .calendar td { border: 1px solid #ccc; padding: 10px; text-align: center; }
-.available { background: #D0E7CA; }
-.busy { background: #F2A2BD; }
-.meetup { background: #FFD370; font-weight: bold; }
+.calendar .available { background: #D0E7CA; }
+.calendar .busy { background: #F2A2BD; }
+.calendar .meetup { background: #FFD370; font-weight: bold; }
