@@ -1,22 +1,24 @@
-import React, { useState } from "react";
+import React from "react";
 import { exportCSV, importCSV } from "../utils/csv";
 
-export default function StudentForm({ students, setStudents }) {
-  const [formData, setFormData] = useState({
-    id: null,
-    name: "",
-    phone: "",
-    email: "",
-    status: "explore",
-    day: "Monday",
-    time: "",
-  });
+/**
+ * StudentForm handles adding and editing students.
+ *
+ * Props:
+ * - students: array of all students
+ * - setStudents: function to update the students list
+ * - formData: current form values (controlled by App)
+ * - setFormData: function to update formData
+ */
+export default function StudentForm({ students, setStudents, formData, setFormData }) {
 
+  // Update form data when user types or selects an option
   const handleChange = (e) => {
     const { id, value } = e.target;
     setFormData((prev) => ({ ...prev, [id]: value }));
   };
 
+  // Reset form fields to initial empty/default values
   const resetForm = () => {
     setFormData({
       id: null,
@@ -29,29 +31,32 @@ export default function StudentForm({ students, setStudents }) {
     });
   };
 
+  // Handle form submission (add or edit student)
   const handleSubmit = (e) => {
-    e.preventDefault();
+    e.preventDefault(); // prevent page reload
+
+    // Require a name
     if (!formData.name.trim()) {
       alert("Please enter a name");
       return;
     }
 
     if (formData.id) {
+      // Editing existing student -> update the matching student
       setStudents((prev) =>
         prev.map((s) => (s.id === formData.id ? { ...formData } : s))
       );
     } else {
-      const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+      // Adding new student -> create a unique id and append to list
+      const id =
+        Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
       setStudents((prev) => [...prev, { ...formData, id }]);
     }
-    resetForm();
+
+    resetForm(); // clear form after save
   };
 
-  const handleEdit = (student) => {
-    setFormData(student);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
+  // Export all students as a CSV file
   const handleExport = () => {
     const csv = exportCSV(students);
     const blob = new Blob([csv], { type: "text/csv" });
@@ -62,19 +67,24 @@ export default function StudentForm({ students, setStudents }) {
     document.body.appendChild(a);
     a.click();
     a.remove();
-    URL.revokeObjectURL(url);
+    URL.revokeObjectURL(url); // cleanup
   };
 
+  // Import students from CSV and merge into current list
   const handleImport = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
     const text = await file.text();
     const importedRows = importCSV(text);
     const merged = [...students];
+
     importedRows.forEach((row) => {
       if (!row.id) {
-        row.id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+        row.id =
+          Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
       }
+
       const existingIndex = merged.findIndex((s) => s.id === row.id);
       if (existingIndex >= 0) {
         merged[existingIndex] = { ...merged[existingIndex], ...row };
@@ -82,11 +92,13 @@ export default function StudentForm({ students, setStudents }) {
         merged.push(row);
       }
     });
+
     setStudents(merged);
     alert(`Imported ${importedRows.length} rows`);
-    e.target.value = "";
+    e.target.value = ""; // reset file input
   };
 
+  // Reset all students with confirmation
   const handleResetAll = () => {
     if (window.confirm("This will delete ALL saved students. Continue?")) {
       setStudents([]);
@@ -95,7 +107,7 @@ export default function StudentForm({ students, setStudents }) {
 
   return (
     <form onSubmit={handleSubmit} className="card" id="addForm">
-      {/* Name */}
+      {/* Name input */}
       <div>
         <label htmlFor="name">Student name</label>
         <input
@@ -108,7 +120,7 @@ export default function StudentForm({ students, setStudents }) {
         />
       </div>
 
-      {/* Phone */}
+      {/* Phone input */}
       <div>
         <label htmlFor="phone">Phone</label>
         <input
@@ -120,7 +132,7 @@ export default function StudentForm({ students, setStudents }) {
         />
       </div>
 
-      {/* Email */}
+      {/* Email input */}
       <div>
         <label htmlFor="email">Email</label>
         <input
@@ -132,7 +144,7 @@ export default function StudentForm({ students, setStudents }) {
         />
       </div>
 
-      {/* Status */}
+      {/* Status dropdown */}
       <div>
         <label htmlFor="status">Study stage</label>
         <select id="status" value={formData.status} onChange={handleChange}>
@@ -143,7 +155,7 @@ export default function StudentForm({ students, setStudents }) {
         </select>
       </div>
 
-      {/* Day */}
+      {/* Day dropdown */}
       <div>
         <label htmlFor="day">Meet day</label>
         <select id="day" value={formData.day} onChange={handleChange}>
@@ -155,7 +167,7 @@ export default function StudentForm({ students, setStudents }) {
         </select>
       </div>
 
-      {/* Time */}
+      {/* Time dropdown */}
       <div>
         <label htmlFor="time">Meet time</label>
         <select id="time" value={formData.time} onChange={handleChange}>
@@ -173,7 +185,7 @@ export default function StudentForm({ students, setStudents }) {
         </select>
       </div>
 
-      {/* Actions */}
+      {/* Action buttons */}
       <div className="full actions">
         <button type="submit">
           {formData.id ? "Save changes" : "Add student"}
@@ -182,6 +194,7 @@ export default function StudentForm({ students, setStudents }) {
           Clear form
         </button>
         <div className="right">
+          {/* Hidden file input for CSV import */}
           <input
             type="file"
             accept=".csv,text/csv"
